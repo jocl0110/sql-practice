@@ -1,28 +1,48 @@
 import z from "zod";
 
-const productSchema = z.object({
-  name: z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be a string",
+const imageSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("url"),
+    value: z
+      .string({
+        required_error: "Image URL is required",
+        invalid_type_error: "Image must be a string",
+      })
+      .url({
+        message: "Only jpg, jpeg, png, and webp images are allowed",
+      }),
   }),
-  description: z.string({
-    required_error: "Description is required",
-    invalid_type_error: "Description must be a string",
-  }),
-  images: z
-    .array(
-      z
-        .string({
-          required_error: "Image URL is required",
-          invalid_type_error: "Image must be a string",
-        })
-        .url({
-          message: "Invalid URL format for image", // Custom message for invalid URL
-        })
-    )
-    .nonempty({
-      message: "At least one image URL is required", // Custom message for non-empty array
+  z.object({
+    type: z.literal("file"),
+    value: z.string({
+      required_error: "Image file path is required",
+      invalid_type_error: "Image must be a string",
     }),
+    filename: z.string(),
+    mimetype: z.enum(["image/jpeg", "image/jpg", "image/png", "image/webp"]),
+    size: z.number().max(5 * 1024 * 1024, {
+      // 5 MB limit for image size
+      message: "Image size must be less than or equal to 5MB",
+    }),
+  }),
+]);
+
+const productSchema = z.object({
+  name: z
+    .string({
+      required_error: "Name is required",
+      invalid_type_error: "Name must be a string",
+    })
+    .min(2, {
+      message: "Name must be at least 2 characters long",
+    })
+    .max(100, { message: "Name must be at most 100 characters long" }),
+  images: z
+    .array(imageSchema)
+    .nonempty({
+      message: "At least one image is required",
+    })
+    .max(5, { message: "Maximum of 5 images are allowed" }),
   price: z
     .number({
       required_error: "Price is required",
@@ -41,8 +61,22 @@ const productSchema = z.object({
     }),
 });
 
-export function validateProduct(object: unknown) {
-  return productSchema.safeParse(object);
+export type Product = z.infer<typeof productSchema>;
+export type Image = z.infer<typeof imageSchema>;
+
+export class ProductValidator {
+  static validateCreate(input: unknown) {
+    return productSchema.safeParse(input);
+  }
+  static validateUpdate(input: unknown) {
+    return productSchema.partial().safeParse(input);
+  }
+  static validateImage(input: unknown) {
+    return imageSchema.safeParse(input);
+  }
+  static validateImages(input: unknown) {
+    return z.array(imageSchema).nonempty().max(5).safeParse(input);
+  }
 }
 
 export default productSchema;

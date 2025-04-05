@@ -9,6 +9,7 @@ import recipesRouter from "./routes/recipeRouter";
 const app = express();
 
 // Middlewares
+app.use(express.json());
 
 // Routes
 app.use("/store/products", productRouter);
