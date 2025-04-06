@@ -1,4 +1,4 @@
-import sql from "mysql2";
+import sql from "mysql2/promise";
 import {
   DB_HOST,
   DB_NAME,
@@ -7,12 +7,14 @@ import {
   DB_USER,
 } from "../constants/env";
 
-const db = sql.createConnection({
+const config = {
   host: DB_HOST,
   port: parseInt(DB_PORT),
   user: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
-});
+};
+
+const db = sql.createConnection(config);
 
 export default db;
