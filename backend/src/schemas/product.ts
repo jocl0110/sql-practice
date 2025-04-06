@@ -59,6 +59,24 @@ const productSchema = z.object({
     .refine((value) => value.length > 0, {
       message: "Category cannot be an empty string", // Custom message for non-empty category
     }),
+  stock: z
+    .number()
+    .positive({
+      message: "Stock must be a positive number",
+    })
+    .int({
+      message: "Stock must be an integer", // Ensure stock is an integer
+    })
+    .default(0), // Default to 0 if not provided
+  description: z
+    .string({
+      required_error: "Description is required",
+      invalid_type_error: "Description must be a string",
+    })
+    .max(500, {
+      message: "Description must be at most 500 characters long", // Custom message for max length
+    })
+    .optional(), // Make description optional, but if provided, it must follow the rules above
 });
 
 export type Product = z.infer<typeof productSchema>;

@@ -1,9 +1,11 @@
 import { BAD_REQUEST } from "../constants/http";
+import db from "../database/db";
 import { ProductValidator } from "../schemas/product";
 import catchErrors from "../utils/catchErrors";
 
 export const getAllProducts = catchErrors(async (_req, res) => {
-  res.json({ message: "Getting all products" });
+  const [products] = await (await db).query(`SELECT * FROM products`);
+  res.json({ products });
 });
 export const getProductById = catchErrors(async (req, res) => {
   const { id } = req.params;
@@ -21,6 +23,7 @@ export const createProduct = catchErrors(async (req, res) => {
       errors: validation.error.flatten(),
     });
   }
+
   return res.status(201).json({
     message: "Creating a new product",
   });
